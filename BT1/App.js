@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {View, Text, TouchableOpacity, FlatList,PermissionsAndroid} from 'react-native';
 import {BleManager} from 'react-native-ble-plx';
-//import {PERMISSIONS, RESULTS, requestMultiple,checkMultiple,request} from 'react-native-permissions';
+import {PERMISSIONS, RESULTS, requestMultiple,checkMultiple,request} from 'react-native-permissions';
 import base64 from 'react-native-base64';
 
 const App = () => {
