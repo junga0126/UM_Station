@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, TouchableOpacity, FlatList,PermissionsAndroid} from 'react-native';
+import {View, Text, TouchableOpacity, FlatList,PermissionsAndroid,Button} from 'react-native';
 import {BleManager} from 'react-native-ble-plx';
 //import {PERMISSIONS, RESULTS, requestMultiple,checkMultiple,request} from 'react-native-permissions';
 import base64 from 'react-native-base64';
@@ -45,13 +45,13 @@ const App = () => {
       await connectedDevice.discoverAllServicesAndCharacteristics();
       console.log('Connected to', connectedDevice.name);
 
-      // //Read Massage from Connected Device
-      // connectedDevice.monitorCharacteristicForService(
-      //   '0000ffe0-0000-1000-8000-00805f9b34fb', //serviceUUID
-      //   '0000ffe1-0000-1000-8000-00805f9b34fb', //characterUUID
-      //   (error,Characteristic)=>{
-      //   console.log('monitorCharacteristicForService: '+base64.decode(`${Characteristic?.value}`));
-      // })
+      //Read Massage from Connected Device
+      connectedDevice.monitorCharacteristicForService(
+        '0000ffe0-0000-1000-8000-00805f9b34fb', //serviceUUID
+        '0000ffe1-0000-1000-8000-00805f9b34fb', //characterUUID
+        (error,Characteristic)=>{
+        console.log('monitorCharacteristicForService: '+base64.decode(`${Characteristic?.value}`));
+      })
     } catch (error) {
       console.log('Connection/Read error:', error);
     }
@@ -73,10 +73,10 @@ const App = () => {
         '4C:24:98:70:B0:B9',
         '0000ffe0-0000-1000-8000-00805f9b34fb', //serviceUUID
         '0000ffe1-0000-1000-8000-00805f9b34fb', //characterUUID
-        base64.encode('안녕')
+        '7JWI64WV'
       )
     }catch(error){
-      console.log('error in send data');
+      console.log(error);
     }
   }
 
