@@ -7,6 +7,8 @@ import base64 from 'react-native-base64';
 const App = () => {
   const [manager] = useState(new BleManager());
   const [devices, setDevices] = useState([]); //Scan devices
+  const [test, setTest] = useState();
+
 
   useEffect(() => {
     const subscription = manager.onStateChange(state => {
@@ -30,20 +32,28 @@ const App = () => {
         return prevDevices;
       });
     });
-
     setTimeout(() => {
       manager.stopDeviceScan();
     }, 10000);
   };
 
-  //connect
+  
   const connectToDevice = async device => {
     try {
+      //connect
       const connectedDevice = await manager.connectToDevice(device.id);
       await connectedDevice.discoverAllServicesAndCharacteristics();
       console.log('Connected to', connectedDevice.name);
+
+      // //Read Massage from Connected Device
+      // connectedDevice.monitorCharacteristicForService(
+      //   '0000ffe0-0000-1000-8000-00805f9b34fb', //serviceUUID
+      //   '0000ffe1-0000-1000-8000-00805f9b34fb', //characterUUID
+      //   (error,Characteristic)=>{
+      //   console.log('monitorCharacteristicForService: '+base64.decode(`${Characteristic?.value}`));
+      // })
     } catch (error) {
-      console.log('Connection error:', error);
+      console.log('Connection/Read error:', error);
     }
   };
 
@@ -55,11 +65,30 @@ const App = () => {
   
   );
 
+   //send
+   const send = async () =>{
+    try{
+      console.log('SSSSSSSSSSSSSSSSSSSSSSSSSSSSS')
+       await manager.writeCharacteristicWithResponseForDevice(
+        '4C:24:98:70:B0:B9',
+        '0000ffe0-0000-1000-8000-00805f9b34fb', //serviceUUID
+        '0000ffe1-0000-1000-8000-00805f9b34fb', //characterUUID
+        base64.encode('안녕')
+      )
+    }catch(error){
+      console.log('error in send data');
+    }
+  }
+
   return (
     <View>
       <TouchableOpacity onPress={() => scanAndConnect()}>
         <Text style = {{fontSize:30, paddingTop:30}}>{"Click to Scan"} </Text>
       </TouchableOpacity>
+      <Button 
+      onPress={send}
+      title='보내기'
+      />
       <Text>Bluetooth Devices:</Text>
       <FlatList
         data={devices}
