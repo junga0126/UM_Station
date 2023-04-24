@@ -8,6 +8,10 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-firebase/app": "17.4.1",
+    "@react-native-firebase/database": "17.4.1",
+    "@react-native-firebase/firestore": "17.4.1",
+    "@react-native-firebase/storage": "17.4.2",
     "expo": "~47.0.14",
     "expo-splash-screen": "~0.17.5",
     "expo-status-bar": "~1.4.2",

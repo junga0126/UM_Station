@@ -1,6 +1,8 @@
 import React, {useState, useEffect} from 'react';
 import {View, Text, TouchableOpacity, FlatList,PermissionsAndroid,Button} from 'react-native';
 import {BleManager} from 'react-native-ble-plx';
+import { db } from '../BT1/firebaseConfig';
+import { addDoc, collection, getDocs } from 'firebase/firestore';
 //import {PERMISSIONS, RESULTS, requestMultiple,checkMultiple,request} from 'react-native-permissions';
 import base64 from 'react-native-base64';
 
@@ -8,14 +10,34 @@ const App = () => {
   const [manager] = useState(new BleManager());
   const [devices, setDevices] = useState([]); //Scan devices
   const [test, setTest] = useState();
+  const [user, setUsers] = useState();
 
 
   useEffect(() => {
     const subscription = manager.onStateChange(state => {
       if (state === 'PoweredOn') scanAndConnect(); 
     }, true);
-    return () => subscription.remove();
   }, []);
+
+  const dbTest = async() =>{
+    // firebase
+    console.log("dbdbdbdb");
+    try {
+      const data = await getDocs(collection(db, "User"))
+      setUsers(data.docs.map(doc => ({ ...doc.data(), id: doc.id })))
+      console.log('users--------\n', user)
+    } catch (error) {
+      console.log(error)
+    }
+    return () => subscription.remove();
+  }
+
+const rent = async() => {
+  //우산번호와 일치하는 각도 가져오기
+  
+}
+
+
 
   //scan
   const scanAndConnect = async() => {
@@ -88,6 +110,10 @@ const App = () => {
       <Button 
       onPress={send}
       title='보내기'
+      />
+      <Button 
+      onPress={dbTest}
+      title='User'
       />
       <Text>Bluetooth Devices:</Text>
       <FlatList
