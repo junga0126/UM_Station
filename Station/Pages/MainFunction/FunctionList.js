@@ -1,11 +1,10 @@
 //23.06.04 19:14
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState, useEffect, Component } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Button } from 'react-native';
-
 import { db } from '../../firebaseConfig';
-import { addDoc, getDocs, collection, setDoc, doc } from 'firebase/firestore';
-import { set } from 'react-native-reanimated';
+import { getDocs, collection } from 'firebase/firestore';
+import AppContext from '../Appcontext';
 
 const FunctionList = ({ navigation, route }) => {
     const [retalButton, setRentalButton] = useState(true)
@@ -13,8 +12,8 @@ const FunctionList = ({ navigation, route }) => {
     const [userstate, setUserState] = useState(true)
     const [stationNum, setStationNum] = useState('') //station data
     const [manager, setManager] = useState(); //ble manager
-    const [st_id, setStId]= useState(); //station id
-    const [id, setId] = useState(AsyncStorage.getItem('id'))
+    const [st_id, setStId] = useState(); //station id
+    const [id] = useState(AsyncStorage.getItem('id'));
 
     useEffect(() => {
         // 로직
