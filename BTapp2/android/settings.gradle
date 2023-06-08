@@ -1,6 +1,0 @@
-rootProject.name = 'BTapp2'
-apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
-include ':app'
-include ':@react-native-firebase_auth' //add
-project(':@react-native-firebase_auth').projectDir = new File(rootProject.projectDir, './../node_modules/@react-native-firebase/auth/android')//add
-includeBuild('../node_modules/react-native-gradle-plugin')
