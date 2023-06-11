@@ -1,4 +1,4 @@
-import React, { useEffect, useState,  useRef,} from 'react';
+import React, { useEffect, useState,  useRef} from 'react';
 import {  View, StyleSheet, Dimensions, Pressable, Image, Text,  } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 // npm i react-native-maps
@@ -17,7 +17,7 @@ const Map = ({navigation}) => {
     latitude: 36.7992587626175, //위도
     longitude: 127.07589223496811, //경도
   });
-  //firestor 연동
+  //firestore 연동
   const [stations, setStations] = useState();
   //에니메이션으로 이동
   const mapRef = React.useRef(null);
@@ -27,8 +27,6 @@ const Map = ({navigation}) => {
   const mapRegionChangehandle = (region) => {
       setRegion(region)
   };
-
-
 
   useEffect(() => {
     (async () => {
@@ -63,13 +61,6 @@ const Map = ({navigation}) => {
     })();
   }, []);
 
-
-
-
-
-
-
-
   //이동하기
   const onDetail = (lat, lon) => { // 반납 가능 우산 개수, 대여 가능 우산 개수 계산
     setmapRegion({ //현재 위치
@@ -91,7 +82,7 @@ const Map = ({navigation}) => {
       <View style={styles.containerMap}>
         <MapView
           style={styles.map}
-          // region={mapRegion}
+          //region={mapRegion}
           // initialRegion={{mapRegion}}
           initialRegion={{
             latitude: mapRegion ? mapRegion.latitude:0,

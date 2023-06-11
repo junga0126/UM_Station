@@ -1,81 +1,103 @@
-import { useState, useEffect, useContext } from 'react';
-import { View, Image, Text, StyleSheet, Dimensions } from 'react-native';
+//23.06.04 19:12
+import { useState, useEffect, Component, useContext } from 'react';
+import { 
+    View, Image, Text, StyleSheet, 
+    Button,Dimensions, Alert
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native'; //navigation 오류로 인해 네이티브 훅 라이브러리를 사용
 import AppContext from '../Appcontext';
-import base64 from 'react-native-base64'; 
+
+// 블루투스
+import base64 from 'react-native-base64';
 import { BleManager } from 'react-native-ble-plx';
 
-const Loading = ({navigation}) => {
-    const [manager] = useState(new BleManager()); //bluetooth object
-    const [connect, setConnect] = useState(false); //connect state
+const Loading = ({route, navigation}) => {
+    const [stationData, setStationData] = useState(); // Station 전체 데이터
+    const [manager] = useState(new BleManager()); //블루투스 객체
+    const [connect, setConnect] = useState(false) //connect 여부
+    const [stID, setStId] = useState(); //스테이션 id
+    const [um_num, setUmNum] = useState(0); //우산 번호
+    const [flag, setFlag] = useState(false); //동작 상태
+   
     const myContext = useContext(AppContext);
 
+    // 블루투스 
     useEffect(() => {
         manager.onStateChange(state => {
             if (state === 'PoweredOn') {
-                //Station mac주소를 통해 connect
                 connectToDevice(myContext.connectedStation.st_mac);
             }
         }, true);
+        setStationData(myContext.connectedStation);
     }, [connect, myContext]);
 
-    //Bluetooth Connect & Read
-    const connectToDevice = async mac => { //[TESTBT] 4C:24:98:70:B0:B9
+    const connectToDevice = async device => { // 매개변수로 mac주소를 전달받음 TESTBT: 4C:24:98:70:B0:B9, FINAL:F0:B5:D1:AA:0C:24
         try {
             //connect
-            const connectedDevice =  await manager.connectToDevice(mac); //mac 주소로 연결 
+            const connectedDevice =  await manager.connectToDevice(device); //mac 주소로 연결 
             await connectedDevice.discoverAllServicesAndCharacteristics(); 
-            console.log('Connected to', connectedDevice.name);
-            setConnect(true); 
+            console.log('Connected to', connectedDevice.name); // 연결된 기기 이름
+            setConnect(true)
            
-            //Read 
+            //Read Massage from Connected Device
             connectedDevice.monitorCharacteristicForService(
                 '0000ffe0-0000-1000-8000-00805f9b34fb', //serviceUUID
                 '0000ffe1-0000-1000-8000-00805f9b34fb', //characterUUID
                 (error, Characteristic) => {
-                    console.log('Read Massage from connected Device: ' + base64.decode(`${Characteristic?.value}`));
+                    console.log('monitorCharacteristicForService: ' + base64.decode(`${Characteristic?.value}`));
+                    //[1] 중복 read 발생
+                    var data = base64.decode(`${Characteristic?.value}`);
+                    //myContext.set_readState(true);
+                    if(myContext.readData == data){ 
+                        console.log("중복 read");
+                    //[2] new read data update
+                    }else{
                     const read_data = base64.decode(`${Characteristic?.value}`);
-                    myContext.setRead(read_data);
-
-                    //중복 read 확인(기존 전역변수 read_data)
-                    if(myContext.read_data == read_data)
-                        console.log("Read- " + myContext.read_data + " : " + read_data);
-                    else{
-                        //read_data/10 = code (1:대여, 2:반납, 3:기부)
                         switch(read_data){
                             case "11":
                             case "12":
                             case "13":
+                                myContext.setData(base64.decode(`${Characteristic?.value}`));
+                                console.log("state1: "+myContext.state);
+                                myContext.setState(true);
                                 navigation.navigate("RentalPage");
                                 break;
                             case "24":
                             case "25":
                             case "26":
+                                myContext.setData(base64.decode(`${Characteristic?.value}`));
                                 navigation.navigate("ReturnPage");
                                 break;
                             case "37":
                             case "38":   
+                                myContext.setData(base64.decode(`${Characteristic?.value}`));
                                 navigation.navigate("DonationPage"); 
                                 break;
                         }
                     }
                 }
             )
+            // 블루투스 연결 실패 시
         } catch (error) {
             console.log("해당 기기를 찾을 수 없습니다")
             console.log('Connection/Read error:', error);
         }
     };
 
+
     return (
         <>
         { 
             connect ? 
             navigation.push('FunctionList',{
-                manager: manager
+                data: myContext.connectedStation,
+                device: manager
             })
             :
             (
-                <View style={styles.LoadingView}>
+                <View 
+                style={styles.LoadingView}
+                >
                     <Image
                         style={{ width: 100, height: 100, resizeMode: 'contain', }}
                         source={require('../assets/loading_do.gif')}
@@ -89,6 +111,7 @@ const Loading = ({navigation}) => {
     );
     
 };
+
 export default Loading;
 
 const styles = StyleSheet.create({

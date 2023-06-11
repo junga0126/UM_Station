@@ -145,11 +145,11 @@ const UserInfo = (props) => {
                         <Text style={{marginTop:5}}>* 프로필을 클릭하여 수정해보세요*</Text>
                     </View>
 
-                    <Detail title="닉네임" value={myContext.connectedUser.u_name} icon="false"/>
-                    <Detail title="ID" value={myContext.connectedUser.u_id}  icon="false"/>
+                    <Detail title="닉네임" value={myContext.user_data.u_name} icon="false"/>
+                    <Detail title="ID" value={myContext.user_data.u_id}  icon="false"/>
                     <Detail title="PW" value="*****"  icon="false"/>
-                    <Detail title="번호" value={myContext.connectedUser.u_phone} icon="false" />
-                    <Detail title="이메일" value={myContext.connectedUser.u_email}  icon="false"/>
+                    <Detail title="번호" value={myContext.user_data.u_phone} icon="false" />
+                    <Detail title="이메일" value={myContext.user_data.u_email}  icon="false"/>
                 </View>
 
 

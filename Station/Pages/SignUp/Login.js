@@ -1,36 +1,23 @@
-import { useEffect, useState } from "react";
-import {
-    Text, View, TextInput,
-    TouchableOpacity, StyleSheet,
-    Alert, Keyboard, Image,
-    KeyboardAvoidingView
-} from "react-native";
+import { useEffect, useState, useContext } from "react";
+import { Text, View, TextInput, TouchableOpacity, StyleSheet, Alert, Keyboard, Image, KeyboardAvoidingView } from "react-native";
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
-
-// firebase 데이터 추가
 import { db } from '../../firebaseConfig';
 import { getDocs, collection } from 'firebase/firestore';
-
-// device에 데이터 저장
+import AppContext from "../../Appcontext";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Dimensions } from "react-native";
 
-
-/* LoginScreen - 관리자 로그인 화면 DB를 통해 회원 식별, 회원가입 선택 가능 */
 const Login = (props) => {
     const [users, setUsers] = useState() //불러온 회원 정보
-
     const [idTextInput, setIdTextinput] = useState("") //입력받은 id
     const [pwTextInput, setPwTextinput] = useState("") //입력받은 password
     const [statusBarHeight, setStatusBarHeight] = useState(0);
-
+    const myContext = useContext(AppContext);
 
     useEffect(() => {
-        // DB에서 사용자의 데이터를 가져옴
         (async () => {
             try {
                 const data = await getDocs(collection(db, "User")) // User 데이터 불러옴
-
                 setUsers(data.docs.map(doc => doc.data())) // 데이터를 배열로 저장
                 console.log('users', users)
             } catch (error) {
@@ -38,7 +25,6 @@ const Login = (props) => {
             }
         })();
     }, [])
-
 
     const login = () => {
         (async () => {
@@ -49,7 +35,8 @@ const Login = (props) => {
                 // 입력받은 id와 password가 DB에 저장된 회원정보와 일치하는지 확인
                 users.map((user) => {
                     if (user.u_id == idTextInput && user.u_pw == pwTextInput) {
-                        console.log('login success')
+                        myContext.setUser(user);
+                        console.log('login success');
                     } else {
                         count += 1
                     }
@@ -70,9 +57,6 @@ const Login = (props) => {
         })();
     }
 
-
-
-
     const idChangeInput = (event) => {
         setIdTextinput(event)
     }
@@ -80,9 +64,6 @@ const Login = (props) => {
     const pwChangeInput = (event) => {
         setPwTextinput(event)
     }
-
-
-
 
 
     return (
