@@ -71,7 +71,7 @@ const Loading = ({navigation}) => {
         { 
             connect ? 
             navigation.push('FunctionList',{
-                device: manager
+                manager: manager
             })
             :
             (

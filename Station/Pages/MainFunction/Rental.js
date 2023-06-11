@@ -1,47 +1,40 @@
-//23.06.04 19:15
-import React, { useEffect, useState, Component, useContext } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Dimensions, ScrollView, Pressable, Alert} from 'react-native';
-
+import React, { useEffect, useState, useContext } from 'react';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, Dimensions, ScrollView, Pressable} from 'react-native';
 import TitleName from '../../Component/TitleName';
 import base64 from 'react-native-base64';
 import { db } from '../../firebaseConfig';
-import { collection, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import AppContext from '../../Appcontext.js';
 
 const Rental = ({ navigation, route }) => {
-    //const [stationData, setStationData] = useState(); // Station 전체 데이터
-    const [umbrellaData, setUmbrellaData] = useState([]); // Station에 있는 우산 데이터
-    const [umNumber, setUmNumber] = useState(); // Station에 있는 우산 번호
+    const [umbrellaData, setUmbrellaData] = useState([]); //우산 Data
+    const [umNumber, setUmNumber] = useState(); //Choice UM Number
     const [manager, setManager] = useState();
-    // 모달
-    const [checkModal, setCheckModal] = useState(false); // 모달창
     const myContext = useContext(AppContext);
-
+    const [checkModal, setCheckModal] = useState(false); // 모달창
+    
     useEffect(() => {
-        // props로 받은 station 번호로 데이터 요청
         (async () => {
             try {
-                setManager(route.params.device); //연결된 블루투스 모듈을 다루기 위함 conDevice에 저장
-                //setStId(route.params.st_id);
+                setManager(route.params.manager);
                 const umlist = new Array() // set할 우산 데이터 배열
-                // scan한 station의 정보를 읽어서 map으로 돌리기 위해 변환함
-                for (var i = 0; i < Object.keys(route.params.data.um_count_state).length; i++) { // um_count_state의 길이만큼 반복
-                    
-                    // json 형식으로 만들어서 key값도 바꿔서 만들고 (키 값이 숫자로 되어 있어서 string으로 바꿔줌)
-                    // umbrellaData에 넣어줌
-                    // Object type으로 값을 넣어줌
+                for (var i = 0; i < Object.keys(myContext.station_data.um_count_state).length; i++) { 
+                    /*
+                        scan한 station의 정보를 읽어서 map으로 돌리기 위해 변환함
+                        json 형식으로 만들어서 key값도 바꿔서 만들고 (키 값이 숫자로 되어 있어서 string으로 바꿔줌)
+                        umbrellaData에 넣어줌
+                        Object type으로 값을 넣어줌
+                    */
                     var umDataOj = new Object(); // 우산 데이터를 담을 Object
                     var key = "st_"+String(i+1) // key값 : st_1, st_2, ... 가 됨
                     var value = new Object(); // 새로운 Object 생성
-                    value['angle'] = route.params.data.um_count_state[String(i + 1)].angle
-                    value['state'] = route.params.data.um_count_state[String(i + 1)].state
+                    value['angle'] = myContext.station_data.um_count_state[String(i + 1)].angle
+                    value['state'] = myContext.station_data.um_count_state[String(i + 1)].state
                     // {"action_check": false, "값" : value , ...} 이런 형식으로 만들어짐
                     // [{ " key " : [{ " angle " : 값 , " state " : 값 }], ... }]
-                    
                     // Object type
                     umDataOj[key] = value
                     umlist.push(umDataOj) // umlist에 넣기
-                    // console.log('umlist', umlist) // check
                 }
                 // 우산 데이터가 들어있는 배열을 set
                 setUmbrellaData(umlist)
@@ -51,66 +44,52 @@ const Rental = ({ navigation, route }) => {
         })();
     }, []);
 
-
     //Device로 문자열(각도) 전송
-   const send = async(num) =>{ 
-    try{
-        readAngle(num).then(async (angle)=>{
-            navigation.navigate("RentalPage"); //1번째 이동
-            if(String(angle).length == 1){ 
-                await manager.writeCharacteristicWithResponseForDevice(
-                    `${route.params.data.st_mac}`,
-                    '0000ffe0-0000-1000-8000-00805f9b34fb', //serviceUUID
-                    '0000ffe1-0000-1000-8000-00805f9b34fb', //characterUUID
-                    base64.encode('0000001')
-                )
-                console.log('전송 값: 0000001')
-            }
-            if(String(angle).length == 2){ //각도가 2자리 수이면 0000각도1
-                console.log('Send Function Start');
-                await manager.writeCharacteristicWithResponseForDevice(
-                    `${route.params.data.st_mac}`,
-                    '0000ffe0-0000-1000-8000-00805f9b34fb', //serviceUUID
-                    '0000ffe1-0000-1000-8000-00805f9b34fb', //characterUUID
-                    base64.encode(`0000${angle}1`)
-                )
-                console.log(`전송 값: 0000${angle}1`)
-            }
-            else if(String(angle).length == 3){ //각도가 3자리 수이면 000각도1
-                console.log('Send Function Start');
-                await manager.writeCharacteristicWithResponseForDevice(
-                    `${route.params.data.st_mac}`,
-                    '0000ffe0-0000-1000-8000-00805f9b34fb', //serviceUUID
-                    '0000ffe1-0000-1000-8000-00805f9b34fb', //characterUUID
-                    base64.encode(`000${angle}1`)
-                )
-                console.log(`전송 값: 000${angle}1`)
-            }
-        
-        }) //각도가져오기
-        //setFlag(true);
-        
-    }catch(error){
-        console.log(error);
+    const send = async(num) =>{ 
+        try{
+            readAngle(num).then(async (angle)=>{
+                navigation.navigate("RentalPage"); //1번째 이동
+                var data = ''; 
+                //각도 자릿수별 data 형태 구분
+                if(String(angle).length == 1)
+                    data = '0000001';
+                else if(String(angle).length == 2)
+                    data = `0000${angle}1`;
+                else if(String(angle).length == 3)
+                    data = `000${angle}1`;
+
+                //중복 send data확인
+                if(myContext.send_data == data)
+                    console.log("Send- " + myContext.send_data + " : " + data);
+                else{
+                    await manager.writeCharacteristicWithResponseForDevice(
+                        `${myContext.station_data.st_mac}`,
+                        '0000ffe0-0000-1000-8000-00805f9b34fb', //serviceUUID
+                        '0000ffe1-0000-1000-8000-00805f9b34fb', //characterUUID
+                        base64.encode(data)
+                    )
+                    console.log('전송 값: '+ data);
+                    myContext.setSend(data);
+                }
+            }) 
+        }catch(error){
+            console.log(error);
+        }
     }
-  }
 
-  //각도 가져오기
-  const readAngle = async (num) =>{
-    try{
-        console.log("readAngle: "+num);
-        const docRef = doc(db, "Station",`${route.params.data.st_id}`);
-        const docSnap = await getDoc(docRef);
-        const angle = docSnap.get(`um_count_state.${num}.angle`)
-        console.log("angle: "+angle);
-        
-        return `${angle}`;
-    }catch(error){
-        console.log(error);
+    //각도 가져오기
+    const readAngle = async (num) =>{
+        try{
+            console.log("우산 번호: " + num);
+            const docRef = doc(db, "Station",`${myContext.station_data.st_id}`);
+            const docSnap = await getDoc(docRef);
+            const angle = docSnap.get(`um_count_state.${num}.angle`)
+            console.log("angle: "+angle);
+            return `${angle}`;
+        }catch(error){
+            console.log(error);
+        }
     }
-  }
-
-
     return (
         <View style={styles.container}>
             <TitleName title='대여하기' />
