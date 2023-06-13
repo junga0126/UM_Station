@@ -44,6 +44,7 @@ const DonationPage = ({ navigation, route }) => {
     const [loading, setLoading] = useState(false);
     const myContext = useContext(AppContext);
     const [manager, setManager] = useState();
+    const [toggle, setToggle] = useState(false);
 
 
     if (hasCameraPermission === false) {
@@ -63,7 +64,7 @@ const DonationPage = ({ navigation, route }) => {
                 console.log('Donation Page params', myContext.connectedStation)
                 setStationData(myContext.connectedStation)
                 // 기부한 내용을 확인해야함
-                setManager(route.params.device)
+                setManager(route.params.manager)
                 // DB에 있는 Donation 데이터 가져오기
                 const data = await getDocs(collection(db, "Donation"));
                 setDonationData(data.docs.map(doc => ({ ...doc.data(), id: doc.id })))
@@ -271,8 +272,6 @@ const DonationPage = ({ navigation, route }) => {
     }
 
 
-
-
     return (
         <View style={styles.container}>
             {
@@ -373,9 +372,17 @@ const DonationPage = ({ navigation, route }) => {
                         </View>
 
                         <View style={styles.buttonView}>
-                            {
-                                isphoto ?
-
+                                    { (!toggle)?       
+                                    <TouchableOpacity
+                                        style={styles.buttonstyle}
+                                        onPress={() => {
+                                        setPhotoModal(!photoModal),
+                                        setToggle(true)}
+                                        }
+                                    >
+                                        <Text style={{ fontSize: 20, fontWeight: 'bold', color: 'white' }}>사진 찍기</Text>
+                                    </TouchableOpacity> 
+                                    :
                                     <TouchableOpacity
                                         style={styles.buttonstyle}
                                         onPress={() => {
@@ -390,6 +397,7 @@ const DonationPage = ({ navigation, route }) => {
                                                             send(4);
                                                             updateDB()
                                                             updateState();
+                                                            myContext.setState(false);
                                                             navigation.navigate('Main' )
                                                         }
                                                     }
@@ -401,15 +409,8 @@ const DonationPage = ({ navigation, route }) => {
                                     >
                                         <Text style={{ fontSize: 20, fontWeight: 'bold', color: 'white' }}>폐우산 문 닫기</Text>
                                     </TouchableOpacity>
-                                    :
-                                    <TouchableOpacity
-                                        style={styles.buttonstyle}
-                                        onPress={() => setPhotoModal(!photoModal)}
-                                    >
-                                        <Text style={{ fontSize: 20, fontWeight: 'bold', color: 'white' }}>사진 찍기</Text>
-                                    </TouchableOpacity>
-                            }
-
+    }
+                                    
                         </View>
                     </>
             }
@@ -451,6 +452,9 @@ const styles = StyleSheet.create({
         height: Dimensions.get('window').height * 0.1,
         marginBottom: 40,
         padding: 10,
+        // flexDirection: 'row',
+        // justifyContent: 'space-between',
+        
     },
     buttonstyle: {
         width: '100%',

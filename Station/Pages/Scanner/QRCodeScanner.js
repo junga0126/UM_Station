@@ -30,6 +30,7 @@ const QRCodeScanner = ({ navigation }) => {
 
   // 카메라 핸들러 
   useEffect(() => {
+    console.log("-------QRCodeScanner-------");
     const getBarCodeScannerPermissions = async () => {
       const { status } = await BarCodeScanner.requestPermissionsAsync();
       setHasPermission(status === 'granted');
@@ -41,10 +42,15 @@ const QRCodeScanner = ({ navigation }) => {
   const handleBarCodeScanned = ({ type, data }) => {
     setScanned(true);
     // alert(`Bar code with type ${type} and data ${data} has been scanned!`);
-    console.log(data)
+    console.log('handleBarcodescanned', data)
+    // type check
+    // station id
+    console.log(typeof(data)) // string 
+    var s_data = data.split('"') // " " 기준으로 나누기
+    console.log('s_data', s_data[3])
+    
 
-    checkStation(data.st_id)
-
+    checkStation(s_data[3])
   };
 
   if (hasPermission === null) {
@@ -59,33 +65,43 @@ const QRCodeScanner = ({ navigation }) => {
     // DB 확인하기
     console.log('DB 확인하기')
     try {
-      if (stationNum != null || scanned==true) {
+      // 예외 처리 변수
+      let checkresult = false 
 
-        let checkresult = false // 동일한 stationNum이 있는 지 확인하는 변수
-
-        const data = await getDocs(collection(db, "Station"))
+      const data = await getDocs(collection(db, "Station"))
+      // stationNum 입력했을 때
+      if (stationNum != null) {
         data.docs.map((doc, idx) => {
-          console.log(idx, '=', doc.data())
-          if (doc.data().st_num == station) {
-            console.log('checkresult', doc.data())
-            myContext.setStation(doc.data()); //전역변수 설정
+          // station Num을 입력하고 station의 상태가 false인 경우 -> 사용 가능
+          if (doc.data().st_num == stationNum && doc.data().st_state) {
+            checkresult = true
+            myContext.setStation(doc.data())
             setStationData(doc.data())
             setStationName(doc.data().st_id)
-            checkresult = true //stationNum이랑 같은 게 있으면 true
           }
         })
+      } 
+      // scan 했을 떄
+      else if (station != null){
+        data.docs.map((doc, idx) => {
+          // station scan하고 station의 상태가 false인 경우 -> 사용 가능
+          if (doc.data().st_id == station && doc.data().st_state) {
+            checkresult = true
+            myContext.setStation(doc.data())
+            setStationData(doc.data())
+            setStationName(doc.data().st_id)
+          }
+        })
+      }
 
-
-        if (checkresult) {
-          setNumModalVisible(false) // 번호 입력 모달창 닫기
-          setModalVisible(!modalVisible) // 스캔 모달창 열기
-        }
-        else {
-          alert('동일한 stationNum이 없습니다.')
-        }
-
-      }else{
-        alert('stationNum을 입력해주세요')
+     
+      if (checkresult) { // station 사용 가능
+        setNumModalVisible(false) // 번호 입력 모달창 닫기
+        setModalVisible(!modalVisible) // 스캔 모달창 열기
+      }
+      else {
+        alert('사용할 수 없는 Station입니다. 다시 스캔해주세요')
+       
       }
     } catch (error) {
       console.log('eerror', error.message)
@@ -110,7 +126,7 @@ const QRCodeScanner = ({ navigation }) => {
               </View>
 
               <View style={styles.modalMid}>
-                <Text style={{ fontSize: 25, }}>{stationName}을 </Text>
+                <Text style={{ fontSize: 25, }}>{myContext.connectedStation.st_id}을 </Text>
                 <Text style={{ fontSize: 25, }}>사용하시겠습니까? </Text>
               </View>
 
@@ -120,10 +136,7 @@ const QRCodeScanner = ({ navigation }) => {
                   onPress={() => {
                     setScanned(false)
                     setModalVisible(!modalVisible)
-                    navigation.push("Loading", {
-                      data: stationData,
-                      st_id: stationName
-                    })
+                    navigation.push("Loading")
                   }}>
                   <Text style={styles.textStyle}>예</Text>
                 </Pressable>

@@ -15,14 +15,13 @@ const Loading = ({route, navigation}) => {
     const [stationData, setStationData] = useState(); // Station 전체 데이터
     const [manager] = useState(new BleManager()); //블루투스 객체
     const [connect, setConnect] = useState(false) //connect 여부
-    const [stID, setStId] = useState(); //스테이션 id
-    const [um_num, setUmNum] = useState(0); //우산 번호
-    const [flag, setFlag] = useState(false); //동작 상태
+
    
     const myContext = useContext(AppContext);
 
     // 블루투스 
     useEffect(() => {
+        console.log("--------Loading-------");
         manager.onStateChange(state => {
             if (state === 'PoweredOn') {
                 connectToDevice(myContext.connectedStation.st_mac);
@@ -45,20 +44,16 @@ const Loading = ({route, navigation}) => {
                 '0000ffe1-0000-1000-8000-00805f9b34fb', //characterUUID
                 (error, Characteristic) => {
                     console.log('monitorCharacteristicForService: ' + base64.decode(`${Characteristic?.value}`));
-                    //[1] 중복 read 발생
-                    var data = base64.decode(`${Characteristic?.value}`);
-                    //myContext.set_readState(true);
-                    if(myContext.readData == data){ 
+                    const read_data = base64.decode(`${Characteristic?.value}`);
+                    if(myContext.readData == read_data){ 
                         console.log("중복 read");
                     //[2] new read data update
                     }else{
-                    const read_data = base64.decode(`${Characteristic?.value}`);
                         switch(read_data){
                             case "11":
                             case "12":
                             case "13":
                                 myContext.setData(base64.decode(`${Characteristic?.value}`));
-                                console.log("state1: "+myContext.state);
                                 myContext.setState(true);
                                 navigation.navigate("RentalPage");
                                 break;
@@ -66,11 +61,13 @@ const Loading = ({route, navigation}) => {
                             case "25":
                             case "26":
                                 myContext.setData(base64.decode(`${Characteristic?.value}`));
-                                navigation.navigate("ReturnPage");
+                                myContext.setState(true);
+                                navigation.navigate("Return");
                                 break;
                             case "37":
                             case "38":   
                                 myContext.setData(base64.decode(`${Characteristic?.value}`));
+                                myContext.setState(true);
                                 navigation.navigate("DonationPage"); 
                                 break;
                         }
@@ -89,9 +86,9 @@ const Loading = ({route, navigation}) => {
         <>
         { 
             connect ? 
-            navigation.push('FunctionList',{
+            navigation.navigate('FunctionList',{
                 data: myContext.connectedStation,
-                device: manager
+                manager: manager
             })
             :
             (

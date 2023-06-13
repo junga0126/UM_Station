@@ -20,19 +20,25 @@ const ReturnPage = ({route, navigation}) => {
     const myContext = useContext(AppContext);
     const [numberData, setNumberData] = useState();
     const [reload, setReload] = useState(false);
-
+    const [toggle, setToggle] = useState(false);
 
     useEffect(() => {
-        (async () => {
-            setManager(route.params.device);
-            // if(myContext.connectedStation.st_state && myContext.connectedUser.u_rent){ //스테이션 상태(true) and 사용자 대여 상태(true)
-            //     send();
-            // } else if(myContext.connectedUser.u_rent == false){
-            //     Alert.alert("현재 대여중인 우산이 없습니다.");
-            // }
-        })();
+        setManager(route.params.manager);
+        // (async () => {
+        //     setManager(route.params.manager);
+        //     // if(myContext.connectedStation.st_state && myContext.connectedUser.u_rent){ //스테이션 상태(true) and 사용자 대여 상태(true)
+        //     //     send();
+        //     // } else if(myContext.connectedUser.u_rent == false){
+        //     //     Alert.alert("현재 대여중인 우산이 없습니다.");
+        //     // }
+        // })();
     }, [manager,reload]);
-
+    const updateTrue =async(data) =>{
+        const docStation = doc(db,"Station",myContext.connectedStation.st_id);  
+          await updateDoc(docStation,
+            "return_state", data
+        );
+      }
  
     const send = async(num) =>{ 
         try{
@@ -44,21 +50,23 @@ const ReturnPage = ({route, navigation}) => {
                     console.log("false 우산 번호: "+i+"\n");
                     const angle = docSnap.get(`um_count_state.${String(i)}.angle`)
                     setNumberData(String(i));
+                    updateTrue(String(i));
+                    // myContext.setUmNumber(String(i));
                     console.log("angle: "+angle+"\n");
 
                     if(String(angle).length == 1){ 
                         await manager.writeCharacteristicWithResponseForDevice(
-                            `${route.params.data.st_mac}`,
+                            `${myContext.connectedStation.st_mac}`,
                             '0000ffe0-0000-1000-8000-00805f9b34fb', //serviceUUID
                             '0000ffe1-0000-1000-8000-00805f9b34fb', //characterUUID
                             base64.encode('0000002')
                         )
                         console.log('전송 값: 0000002')
                     }
-                    if(String(angle).length == 2){ //각도가 2자리 수이면 0000각도1
+                    else if(String(angle).length == 2){ //각도가 2자리 수이면 0000각도1
                         console.log('Send Function Start');
                         await manager.writeCharacteristicWithResponseForDevice(
-                            `${route.params.data.st_mac}`,
+                            `${myContext.connectedStation.st_mac}`,
                             '0000ffe0-0000-1000-8000-00805f9b34fb', //serviceUUID
                             '0000ffe1-0000-1000-8000-00805f9b34fb', //characterUUID
                             base64.encode(`0000${angle}2`)
@@ -68,7 +76,7 @@ const ReturnPage = ({route, navigation}) => {
                     else if(String(angle).length == 3){ //각도가 3자리 수이면 000각도1
                         console.log('Send Function Start');
                         await manager.writeCharacteristicWithResponseForDevice(
-                            `${route.params.data.st_mac}`,
+                            `${myContext.connectedStation.st_mac}`,
                             '0000ffe0-0000-1000-8000-00805f9b34fb', //serviceUUID
                             '0000ffe1-0000-1000-8000-00805f9b34fb', //characterUUID
                             base64.encode(`000${angle}2`)
@@ -127,10 +135,10 @@ const ReturnPage = ({route, navigation}) => {
 
 
 
-    return (
+      return (
         <View style={styles.container}>
             {
-                reload?
+                reload ?
                     <View style={styles.explainView}>
                         <Text style={styles.text}>Station</Text>
                         <Text style={styles.text}>작동 중입니다....</Text>
@@ -141,48 +149,47 @@ const ReturnPage = ({route, navigation}) => {
                         <Text style={styles.text}>반납하기 버튼을 눌러주세요</Text>
                     </View>
             }
-            
+
 
 
             <View style={{ padding: 10 }}>
                 <View style={styles.pictureView}>
-                <Image
-                    style={{ width:  Dimensions.get('window').width * 0.9, //pictureViewd = 크기에 맞춰서 style
-                            height: Dimensions.get('window').height * 0.5, 
-                            justifyContent:'center',
-                            alignItems:'center',
-                            padding:10,
-                            backgroundColor:'gray',
-                           }}
-                    source={require('../../assets/ReturnImage.gif')}
-                />
+                    <Image
+                        style={{
+                            width: Dimensions.get('window').width * 0.9, //pictureViewd = 크기에 맞춰서 style
+                            height: Dimensions.get('window').height * 0.5,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            padding: 10,
+                            backgroundColor: 'gray',
+                        }}
+                        source={require('../../assets/ReturnImage.gif')}
+                    />
                 </View>
             </View>
 
             <View style={styles.buttonView}>
-                {
-                    reload ?
-                        <TouchableOpacity
-                            //disabled={(myContext.readData != "24")&&(myContext.readData != "25")&&(myContext.readData != "26")} //받은 문자열이 11,12,13가 아니면 비활성화
-                            style={styles.buttonstyle}
-                            onPress={() => {
-                                updateState(numberData, myContext.readData)
-                                navigation.navigate('Main')
-                            }}
-                        >
-                            <Text style={{ fontSize: 20, fontWeight: 'bold', color: 'white' }}>반납 완료</Text>
-                        </TouchableOpacity>
-                        :
-                        <TouchableOpacity
-                            //disabled={(myContext.readData != "24")&&(myContext.readData != "25")&&(myContext.readData != "26")} //받은 문자열이 11,12,13가 아니면 비활성화
-                            style={styles.buttonstyle}
-                            onPress={() => {
-                                send();
-                                setReload(true);
-                            }}
-                        >
-                            <Text style={{ fontSize: 20, fontWeight: 'bold', color: 'white' }}>반납 하기</Text>
-                        </TouchableOpacity>
+                {toggle ? 
+                    <TouchableOpacity
+                    disabled={true} //받은 문자열이 11,12,13가 아니면 비활성화
+                    style={styles.off_buttonstyle}
+                    
+                >
+                    <Text style={{ fontSize: 20, fontWeight: 'bold', color: 'white' }}>반납 하기</Text>
+                </TouchableOpacity>
+                :
+                <TouchableOpacity
+                    //disabled={(myContext.readData != "24")&&(myContext.readData != "25")&&(myContext.readData != "26")} //받은 문자열이 11,12,13가 아니면 비활성화
+                    style={styles.buttonstyle}
+                    onPress={() => {
+                        send();
+                        setToggle(true);
+                        // setPlease(true);
+                    }}
+                >
+                    <Text style={{ fontSize: 20, fontWeight: 'bold', color: 'white' }}>반납 하기</Text>
+                </TouchableOpacity>
+
                 }
                 
             </View>
@@ -225,6 +232,8 @@ const styles=StyleSheet.create({
         height: Dimensions.get('window').height * 0.1,
         marginBottom: 40,
         padding:10,
+        // flexDirection: 'row',
+        // justifyContent: 'space-between',
     },
     buttonstyle: {
         width: '100%',
@@ -233,6 +242,15 @@ const styles=StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 10,
+    },
+    off_buttonstyle: {
+        width: '100%',
+        height: Dimensions.get('window').height * 0.10,
+        backgroundColor: '#6699FF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 10,
+        opacity: 0.5
     }
 
 

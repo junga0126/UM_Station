@@ -1,6 +1,6 @@
 //23.06.04 19:15
 import React, { useEffect, useState, Component, useContext } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Dimensions, ScrollView, Pressable, Alert} from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, Dimensions, ScrollView, Pressable, Alert } from 'react-native';
 
 import TitleName from '../../Component/TitleName';
 import base64 from 'react-native-base64';
@@ -12,32 +12,32 @@ const Rental = ({ navigation, route }) => {
     //const [stationData, setStationData] = useState(); // Station 전체 데이터
     const [umbrellaData, setUmbrellaData] = useState([]); // Station에 있는 우산 데이터
     const [umNumber, setUmNumber] = useState(); // Station에 있는 우산 번호
-    const [manager, setManager] = useState();
     // 모달
     const [checkModal, setCheckModal] = useState(false); // 모달창
     const myContext = useContext(AppContext);
     const [send_state, setSendState] = useState(false);
+    const [manager, setManager] = useState(); //ble manager
     useEffect(() => {
+        console.log("--------Rental-------");
+        setManager(route.params.manager);
         // props로 받은 station 번호로 데이터 요청
         (async () => {
             try {
-                setManager(route.params.device); //연결된 블루투스 모듈을 다루기 위함 conDevice에 저장
-                //setStId(route.params.st_id);
                 const umlist = new Array() // set할 우산 데이터 배열
                 // scan한 station의 정보를 읽어서 map으로 돌리기 위해 변환함
-                for (var i = 0; i < Object.keys(route.params.data.um_count_state).length; i++) { // um_count_state의 길이만큼 반복
-                    
+                for (var i = 0; i < Object.keys(myContext.connectedStation.um_count_state).length; i++) { // um_count_state의 길이만큼 반복
+
                     // json 형식으로 만들어서 key값도 바꿔서 만들고 (키 값이 숫자로 되어 있어서 string으로 바꿔줌)
                     // umbrellaData에 넣어줌
                     // Object type으로 값을 넣어줌
                     var umDataOj = new Object(); // 우산 데이터를 담을 Object
-                    var key = "st_"+String(i+1) // key값 : st_1, st_2, ... 가 됨
+                    var key = "st_" + String(i + 1) // key값 : st_1, st_2, ... 가 됨
                     var value = new Object(); // 새로운 Object 생성
-                    value['angle'] = route.params.data.um_count_state[String(i + 1)].angle
-                    value['state'] = route.params.data.um_count_state[String(i + 1)].state
+                    value['angle'] = myContext.connectedStation.um_count_state[String(i + 1)].angle
+                    value['state'] = myContext.connectedStation.um_count_state[String(i + 1)].state
                     // {"action_check": false, "값" : value , ...} 이런 형식으로 만들어짐
                     // [{ " key " : [{ " angle " : 값 , " state " : 값 }], ... }]
-                    
+
                     // Object type
                     umDataOj[key] = value
                     umlist.push(umDataOj) // umlist에 넣기
@@ -51,79 +51,75 @@ const Rental = ({ navigation, route }) => {
         })();
     }, []);
 
-
     //Device로 문자열(각도) 전송
-   const send = async(num) =>{ 
-    try{
-        readAngle(num).then(async (angle)=>{
-            navigation.navigate("RentalPage"); //1번째 이동
+    const send = async (num) => {
+        try {
+            console.log("readAngle: " + num); //선택한 우산 번호
+            const docRef = doc(db, "Station", `${myContext.connectedStation.st_id}`);
+            const docSnap = await getDoc(docRef);
+            const angle = docSnap.get(`um_count_state.${num}.angle`)
+            console.log("angle: " + angle);
             if( send_state == true ){
                 console.log("중복 send 발생");
                 console.log("Send- " + myContext.sendData );
             }
             else{
-                if(String(angle).length == 1){ 
+                console.log("send start!!!!");
+                if (String(angle).length == 1) {
                     await manager.writeCharacteristicWithResponseForDevice(
-                        `${route.params.data.st_mac}`,
+                        `${myContext.connectedStation.st_mac}`,
                         '0000ffe0-0000-1000-8000-00805f9b34fb', //serviceUUID
                         '0000ffe1-0000-1000-8000-00805f9b34fb', //characterUUID
                         base64.encode('0000001')
                     )
                     console.log('전송 값: 0000001')
-                    setSendState(true);
-                    //myContext.set_readState(false);
-                    myContext.set_send_data('0000001');
+                    myContext.setSend('0000001');
+                    myContext.setState(false); 
                 }
-                else if(String(angle).length == 2){ //각도가 2자리 수이면 0000각도1
-                    console.log('Send Function Start');
+                else if (String(angle).length == 2) { //각도가 2자리 수이면 0000각도
                     await manager.writeCharacteristicWithResponseForDevice(
-                        `${route.params.data.st_mac}`,
+                        `${myContext.connectedStation.st_mac}`,
                         '0000ffe0-0000-1000-8000-00805f9b34fb', //serviceUUID
                         '0000ffe1-0000-1000-8000-00805f9b34fb', //characterUUID
                         base64.encode(`0000${angle}1`)
                     )
                     console.log(`전송 값: 0000${angle}1`)
-                    setSendState(true);
-                    //myContext.set_readState(false);
-                    myContext.set_send_data(`전송 값: 0000${angle}1`);
+                    myContext.setSend(`0000${angle}1`);
+                    myContext.setState(false); 
                 }
-                else if(String(angle).length == 3){ //각도가 3자리 수이면 000각도1
-                    console.log('Send Function Start');
+                else if (String(angle).length == 3) { //각도가 3자리 수이면 000각도
                     await manager.writeCharacteristicWithResponseForDevice(
-                        `${route.params.data.st_mac}`,
+                        `${myContext.connectedStation.st_mac}`,
                         '0000ffe0-0000-1000-8000-00805f9b34fb', //serviceUUID
                         '0000ffe1-0000-1000-8000-00805f9b34fb', //characterUUID
                         base64.encode(`000${angle}1`)
                     )
                     console.log(`전송 값: 000${angle}1`)
-                    setSendState(true);
-                    //myContext.set_readState(false);
-                    myContext.set_send_data(`전송 값: 000${angle}1`);
+                    myContext.setSend(`000${angle}1`);
+                    myContext.setState(false); 
                 }
+                setSendState(true);
+                navigation.navigate('RentalPage', { manager: manager })
             }
-        }) //각도가져오기
-        //setFlag(true);
-        
-    }catch(error){
-        console.log(error);
+        } catch (error) {
+            console.log(error);
+        }
     }
-  }
 
-  //각도 가져오기
-  const readAngle = async (num) =>{
-    try{
-        console.log("readAngle: "+num);
-        const docRef = doc(db, "Station",`${route.params.data.st_id}`);
-        const docSnap = await getDoc(docRef);
-        const angle = docSnap.get(`um_count_state.${num}.angle`)
-        console.log("angle: "+angle);
-        
-        return `${angle}`;
-    }catch(error){
-        console.log(error);
-    }
-  }
+    //각도 가져오기
+    //   const readAngle = async (num) =>{
+    //     try{
+    //         console.log("readAngle: "+num);
+    //         const docRef = doc(db, "Station",`${myContext.connectedStation.st_id}`);
+    //         const docSnap = await getDoc(docRef);
+    //         const angle = docSnap.get(`um_count_state.${num}.angle`)
+    //         console.log("angle: "+angle);
 
+    //         setAngle(`${angle}`)
+    //     }catch(error){
+    //         console.log(error);
+    //     }
+    //   }
 
     return (
         <View style={styles.container}>
@@ -155,11 +151,13 @@ const Rental = ({ navigation, route }) => {
                                 <Pressable
                                     style={{ width: '50%' }}
                                     onPress={() => {
-                                        //station 유무 확인 함수 → QRCodeScanner에서 하는게 좋을 듯?
                                         //Arduino로 해당 각도 전동
-                                        console.log("umNumber: "+umNumber);
+                                        console.log("umNumber: " + umNumber);
                                         myContext.setUmNumber(umNumber);
-                                        send(umNumber); //우산 번호 send 함수로 전송
+                                        //readAngle(umNumber);
+
+                                        send(umNumber);
+                                        //navigation.navigate("RentalPage");
                                     }}>
                                     <Text style={styles.textStyle}>확인</Text>
                                 </Pressable>
@@ -183,17 +181,17 @@ const Rental = ({ navigation, route }) => {
                         // row 값 확인하기
                         // console.log('angle',row[`st_${idx+1}`].angle)
                         return (
-                            <View style={{ padding: 5 }}>
+                            <View style={{ padding: 5 }} key={idx}>
                                 <TouchableOpacity
                                     key={idx}
-                                    style={row[`st_${idx+1}`].state ? styles.buttonstyle : [styles.buttonstyle, { opacity: 0.3 }]} 
+                                    style={row[`st_${idx + 1}`].state ? styles.buttonstyle : [styles.buttonstyle, { opacity: 0.3 }]}
                                     // 우산이 있으면 버튼을 누를 수 있게 하고, 없으면 누를 수 없게 함
                                     onPress={() => {
                                         console.log('TouchableOpacity')
-                                        setUmNumber(idx+1)
+                                        setUmNumber(idx + 1)
                                         setCheckModal(!checkModal)
                                     }}
-                                    disabled={!row[`st_${idx+1}`].state}
+                                    disabled={!row[`st_${idx + 1}`].state}
                                 >
                                     <Text style={{ fontSize: 20, fontWeight: 'bold', color: 'white' }}>{idx + 1}</Text>
                                 </TouchableOpacity>
@@ -285,5 +283,5 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: 22,
-      },
+    },
 });

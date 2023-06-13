@@ -8,12 +8,12 @@ import { db } from '../../firebaseConfig';
 import { collection, doc, getDoc, updateDoc } from 'firebase/firestore';
 import AppContext from '../../Appcontext';
 
-const RentalPage = ({ route, navigation }) => {
+const RentalPage = ({ navigation }) => {
     const [rental, setRental] = useState('');
     const myContext = useContext(AppContext);
     const [sss, setsss] = useState(false)
-
     useEffect(() => {
+        console.log("--------RentalPage-------");
         setRental(myContext.readData);
         console.log("state " + myContext.state);
         setsss(myContext.state)
@@ -48,7 +48,7 @@ const RentalPage = ({ route, navigation }) => {
                 case "12": //사용자가 대여하고 우산을 안가져간 경우
                     console.log("case 12");
                     Alert.alert("우산을 대여하지 않았습니다. 다시 대여 해주세요.")
-                    navigation.navigate("Main");
+                    navigation.push('Main', { manager: manager });
                     break;
                 case "13": //대여 실패: 공유 우산 존재x     
                     console.log("case 13")
@@ -94,7 +94,9 @@ const RentalPage = ({ route, navigation }) => {
                     onPress={() => {
                         updateState(myContext.selectedUm, myContext.readData)
                         myContext.setState(false); //state 상태 초기화
-                        navigation.navigate('Main')
+                        setTimeout(() => {
+                            navigation.navigate('Main')
+                        }, 3500);
                     }}
                 >
                     <Text style={ { fontSize: 20, fontWeight: 'bold', color: 'white' }}>대여 완료</Text>

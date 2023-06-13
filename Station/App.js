@@ -2,6 +2,8 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState, useRef, } from 'react';
 import { View, Text, StyleSheet, Dimensions, Button, Alert, Modal, Pressable, Image, TextInput, Keyboard, KeyboardAvoidingView, TouchableOpacity } from 'react-native';
 import AppContext from './Appcontext';
+import base64 from 'react-native-base64';
+import { BleManager } from 'react-native-ble-plx';
 
 import Main from "./Pages/Main/Main"
 import Join from  "./Pages/SignUp/Join";
@@ -21,6 +23,7 @@ import RentalPage from "./Pages/MainFunction/RentalPage";
 import ExplainPage from "./Pages/MainFunction/ExplainPage";
 import DonationPage from "./Pages/MainFunction/DonationPage";
 import ReturnPage from "./Pages/MainFunction/ReturnPage";
+import Return from './Pages/MainFunction/Return';
 import ScanStation from './Pages/Service/ScanStation';  
 import Loading from './Component/Loading';
 import ReportList from './Pages/Service/ReportList'
@@ -30,28 +33,23 @@ import { NavigationContainer } from '@react-navigation/native';
 
 
 const Stack = createStackNavigator();
-// expo install react-native-safe-area-context
-// npm install @react-navigation/native
-// expo install react-native-gesture-handler react-native-reanimated react-native-screens react-native-safe-area-context @react-native-community/masked-view
 
 export default function App() {
-
+//const [manager] = useState(new BleManager()); //Ble 객체
 const [readData, setReadData] = useState(''); //블루투스 문자열 수신을 위한 변수
+const [sendData, setSendData] = useState('');
 const [connectedStation,setConnectedStation] = useState({}); //연결된 해당 스테이션
 const [connectedUser, setConnectedUser] = useState(); //연결된 유저
-const [selectedUm, setSelectedUm] = useState();
-const [connectedDevice, setConnectedDevice] = useState();
-const [state, setFlag] = useState(false);
-const [sendData, setSendData] = useState('');
-const [buttonState, setButtonState] = useState(false);
+const [selectedUm, setSelectedUm] = useState(0); //사용자가 선택한 우산 번호
+const [connectedDevice, setConnectedDevice] = useState(); //사용자와 연결된 스테이션
+const [state, setFlag] = useState(false); //아두이노 문자 수신 여부
+const [reload, setReload] = useState(false);
 
-const set_readState = (state) =>{
-  setButtonState(state);
+
+const setReloadGo = (state) =>{
+  setReload(state);
 }
 
-const set_send_data = (data) =>{
-  setSendData(data);
-}
 
 const setState = (state) =>{
   setFlag(state);
@@ -59,6 +57,10 @@ const setState = (state) =>{
 
 const setData = (readData) =>{
   setReadData(readData);
+}
+
+const setSend = (data) =>{
+  setSendData(data);
 }
 
 const setStation = (station) =>{
@@ -75,28 +77,26 @@ const setUmNumber = (umNum) => {
 
 const setConnectDevice = (device) =>{
   setConnectedDevice(device)
+  
 }
-
-
 
 const values = {
   readData: readData,
-  sendData: sendData,
   connectedStation: connectedStation,
   connectedUser: connectedUser,
   selectedUm: selectedUm,
   connectedDevice: connectedDevice,
   state: state, 
-  buttonState: buttonState,
-  set_send_data,
+  sendData: sendData,
+  reload: reload,
   setData,
   setStation,
   setUser,
   setUmNumber,
   setConnectDevice,
   setState,
-  set_readState
-
+  setSend,
+  setReloadGo
 }
 
   return (
@@ -120,12 +120,14 @@ const values = {
           <Stack.Screen name='Loading' component={Loading}/>
           <Stack.Screen name="FunctionList" component={FunctionList}/>
           <Stack.Screen name="Rental" component={Rental}/>
+          <Stack.Screen name="Return" component={Return}/>
           <Stack.Screen name="RentalPage" component={RentalPage} />
           <Stack.Screen name="ExplainPage" component={ExplainPage} />
           <Stack.Screen name="DonationPage" component={DonationPage}/>
           <Stack.Screen name="ReturnPage" component={ReturnPage} />
           <Stack.Screen name="ScanStation" component={ScanStation} />
           <Stack.Screen name="ReportList" component={ReportList}/>
+
         </Stack.Navigator>
       </NavigationContainer>
     </>

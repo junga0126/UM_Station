@@ -38,6 +38,16 @@ const Main = ({ navigation }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [profileImage, setProfileImage] = useState(null);
     const myContext = useContext(AppContext);
+    const [u_rent, setU_rent] = useState();
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('focus', () => {
+            console.log('main focused')
+            readDB()
+        });
+        return unsubscribe;
+    }, []);
+
 
     useEffect(() => {
         (async () => {
@@ -50,20 +60,13 @@ const Main = ({ navigation }) => {
                 setId(id)
 
 
+
                 if (id == null) { // device에 저장된 id가 없으면 Login 페이지로 전환
                     navigation.reset({ routes: [{ name: 'Login' }] })
                 }
 
 
-                // DB에서 디바이스 사용자 아이디와 동일한 데이터만 set하기
-                data.docs.map(doc => {
-                    if (doc.data().u_id == id) {
-                        setUsers(doc.data())
-                        myContext.setUser(doc.data())
-                        console.log(doc.data().u_donation)
-                        setDonation(doc.data().u_donation)
-                    }
-                })
+                readDB()
 
 
             } catch (error) {
@@ -89,7 +92,28 @@ const Main = ({ navigation }) => {
             iconsplit = res.weather[0].icon.split('n')
             seticon(iconsplit[0])
         })();
-    }, [])
+    }, [u_rent]);
+
+
+    const readDB = async () => {
+        try {
+            const id = await AsyncStorage.getItem('id')
+            if (id!=null){
+                const data = await getDocs(collection(db, "User"))
+                data.docs.map(doc => {
+                    if (doc.data().u_id == id) {
+                        setUsers(doc.data())
+                        myContext.setUser(doc.data())
+                        console.log(doc.data().u_donation)
+                        setDonation(doc.data().u_donation)
+                        setU_rent(doc.data().u_rent)
+                    }
+                })
+            }
+        } catch (e) {
+            console.log(e)
+        }
+    }
 
 
     return (
@@ -209,7 +233,7 @@ const Main = ({ navigation }) => {
                                                     </View>
                                                     <View style={{ height: '50%', justifyContent: 'center', width: '100%', alignItems: 'center' }}>
                                                         {
-                                                            users.u_rent ?
+                                                            u_rent ?
                                                                 <Text style={{ fontSize: 38, fontWeight: 'bold', color: '#FF7CBB' }}>대여 중</Text> :
                                                                 <Text style={{ fontSize: 38, fontWeight: 'bold', color: '#05C19C' }}>대여 가능</Text>
                                                         }
