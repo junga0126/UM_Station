@@ -1,7 +1,8 @@
 import { useState, useEffect, useContext } from 'react';
 import { 
     View, Text, StyleSheet, 
-    TouchableOpacity, Dimensions, Image, Alert
+    TouchableOpacity, Dimensions, 
+    Image, LogBox
 } from 'react-native';
 import AppContext from '../../Appcontext';
 
@@ -11,6 +12,8 @@ import { db } from '../../firebaseConfig';
 import { getDoc, doc, updateDoc } from 'firebase/firestore';
 import base64 from 'react-native-base64';
 
+LogBox.ignoreLogs(["'new NativeEventEmitter() ...", "Non-serializable ..."]);
+LogBox.ignoreAllLogs();
 
 const ReturnPage = ({route, navigation}) => {
     const [workcomplete, setWorkcomplete] = useState(false);

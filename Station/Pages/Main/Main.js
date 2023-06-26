@@ -89,10 +89,9 @@ const Main = ({ navigation }) => {
             const res = await response.json()
             // console.log('temp -> ',res)
             setWeather(res)
-            iconsplit = res.weather[0].icon.split('n')
-            seticon(iconsplit[0])
+            seticon(res.weather[0].icon)
         })();
-    }, [u_rent]);
+    }, [u_rent, donation]);
 
 
     const readDB = async () => {
@@ -167,7 +166,6 @@ const Main = ({ navigation }) => {
                     style={styles.explainUMS}
                     onPress={() => {
                         setModalVisible(true)
-                        console.log("Dddd")
                     }}
                 >
                     <View style={{ flexDirection: 'row', width: '100%' }}>
@@ -196,7 +194,7 @@ const Main = ({ navigation }) => {
                                             <>
                                                 <View style={styles.temperature}>
                                                     <View style={{ width: '40%', height: '100%', backgroundColor: 'white', borderRadius: 100, marginRight: 4 }}>
-                                                        <Image style={{ width: '100%', height: '100%' }} source={{ uri: `http://openweathermap.org/img/wn/${icon}d.png` }} />
+                                                        <Image style={{ width: '100%', height: '100%' }} source={{ uri: `http://openweathermap.org/img/wn/${icon}.png` }} />
                                                     </View>
                                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                         <Text style={{ fontSize: 30 }}> {weather.main.temp.toFixed(0)}</Text>
@@ -334,7 +332,7 @@ const Main = ({ navigation }) => {
             <View style={styles.mainfunctionView}>
                 <TouchableOpacity
                     style={styles.mapbutton}
-                    onPress={() => navigation.navigate('Map')}
+                    onPress={() => navigation.navigate('SearchStation')}
                 >
                     <View style={styles.shadow}>
                         <Image style={{ width: '100%', height: '70%', borderRadius: 15 }} source={require('../../assets/main_map.gif')}></Image>

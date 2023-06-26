@@ -1,12 +1,22 @@
 //23.06.04 19:15
 import React, { useEffect, useState, Component, useContext } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Dimensions, ScrollView, Pressable, Alert } from 'react-native';
+import {
+    View, Text, StyleSheet, 
+    Modal, TouchableOpacity, 
+    Dimensions, ScrollView, 
+    Pressable, LogBox 
+} from 'react-native';
 
 import TitleName from '../../Component/TitleName';
 import base64 from 'react-native-base64';
 import { db } from '../../firebaseConfig';
 import { collection, doc, getDoc, updateDoc } from 'firebase/firestore';
 import AppContext from '../../Appcontext.js';
+
+
+LogBox.ignoreLogs(["'new NativeEventEmitter() ...", "Non-serializable ..."]);
+LogBox.ignoreAllLogs();
+
 
 const Rental = ({ navigation, route }) => {
     //const [stationData, setStationData] = useState(); // Station 전체 데이터

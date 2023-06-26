@@ -3,7 +3,7 @@ import {
     View, Text, StyleSheet,
     TouchableOpacity, Dimensions,
     Modal, Pressable,
-    Image, Alert, ActivityIndicator
+    Image, Alert, LogBox
 } from 'react-native';
 
 
@@ -20,7 +20,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import AppContext from '../../Appcontext';
 import base64 from 'react-native-base64';
 
-
+LogBox.ignoreLogs(["'new NativeEventEmitter() ...", "Non-serializable ..."]);
+LogBox.ignoreAllLogs();
 
 const DonationPage = ({ navigation, route }) => {
     // 사진 찍음 여부 확인 -> 사진 찍으면 true(=station 작동 disabled는 true)
@@ -398,7 +399,9 @@ const DonationPage = ({ navigation, route }) => {
                                                             updateDB()
                                                             updateState();
                                                             myContext.setState(false);
-                                                            navigation.navigate('Main' )
+                                                            setTimeout(() => {
+                                                                navigation.navigate('Main')
+                                                            }, 3500);
                                                         }
                                                     }
                                                 ]

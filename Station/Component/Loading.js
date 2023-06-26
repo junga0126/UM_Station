@@ -2,7 +2,7 @@
 import { useState, useEffect, Component, useContext } from 'react';
 import { 
     View, Image, Text, StyleSheet, 
-    Button,Dimensions, Alert
+    Button, Dimensions, LogBox, 
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native'; //navigation 오류로 인해 네이티브 훅 라이브러리를 사용
 import AppContext from '../Appcontext';
@@ -10,6 +10,9 @@ import AppContext from '../Appcontext';
 // 블루투스
 import base64 from 'react-native-base64';
 import { BleManager } from 'react-native-ble-plx';
+
+LogBox.ignoreLogs(["'new NativeEventEmitter() ...", "Non-serializable ..."]);
+LogBox.ignoreAllLogs();
 
 const Loading = ({route, navigation}) => {
     const [stationData, setStationData] = useState(); // Station 전체 데이터
@@ -93,7 +96,7 @@ const Loading = ({route, navigation}) => {
             :
             (
                 <View 
-                style={styles.LoadingView}
+                style={styles.container}
                 >
                     <Image
                         style={{ width: 100, height: 100, resizeMode: 'contain', }}
@@ -112,17 +115,11 @@ const Loading = ({route, navigation}) => {
 export default Loading;
 
 const styles = StyleSheet.create({
-    LoadingView: {
-        backgroundColor:'white',
-        alignItems: 'center',
-        justifyContent:'center'
-    },
     container: {
         flex: 1,
         backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'center',
-        
     },
     explainView: {
         width: Dimensions.get('window').width * 0.9,

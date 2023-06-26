@@ -209,7 +209,6 @@ const QRCodeScanner = ({ navigation }) => {
         barCodeTypes={BarCodeScanner.type}
         flashMode={flash}
       >
-        <Text style={{ fontWeight: 'bold', color: 'white', fontSize: 20 }}>Scan your QR code</Text>
         <Image
           style={styles.qr}
           source={require('../../assets/qr_scan.png')}
